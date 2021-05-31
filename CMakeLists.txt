@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 # Project
 project(System_project)
 
+# test
+
 # Sources
 file(GLOB_RECURSE SOURCES sources/*.cpp)
 file(GLOB_RECURSE HEADERS includes/*.hpp includes/*.h)
