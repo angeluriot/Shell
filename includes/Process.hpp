@@ -1,8 +1,9 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
-#include <unistd.h>
+#include <unistd.hpp>
 #include <vector>
 #include <string>
+#include <sys/types.h>
 
 class Process
 {
