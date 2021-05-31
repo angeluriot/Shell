@@ -11,6 +11,6 @@ int main()
 	std::shared_ptr<int> ptr = std::make_shared<int>(5);
 
 	std::cout << *ptr << std::endl;
-
+	// yoyoyo
 	return 0;
 }
