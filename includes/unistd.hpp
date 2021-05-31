@@ -3,6 +3,7 @@
 
 #ifdef __unix__
 #include <unistd.h>
+#include <termios.h>
 #else
 #include <stdlib.h>
 #include <io.h>
