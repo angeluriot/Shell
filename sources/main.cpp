@@ -1,16 +1,12 @@
-#include <iostream>
-#include <memory>
+#include "Process.hpp"
+#include "Job.hpp"
+#include "Shell.hpp"
 
-void add(const int& value_1, const int& value_2)
+int main(int argc, char** argv, char** env)
 {
-	std::cout << value_1;
-}
+	Shell::init();
 
-int main()
-{
-	std::shared_ptr<int> ptr = std::make_shared<int>(5);
+	std::cout << "test" << std::endl;
 
-	std::cout << *ptr << std::endl;
-	// yoyoyo
 	return 0;
 }
