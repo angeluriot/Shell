@@ -1,7 +1,29 @@
 #include "Job.hpp"
 #include "Shell.hpp"
 
-std::vector<Job> Job::list = {};
+std::list<Job> Job::list = {};
+
+Job::Job(std::string command, int std_in, int std_out, int std_err) 
+{
+	this->command = command;
+	pgid = 0;
+	notified = false;
+	terminal_modes = termios();
+	this->std_in = std_in;
+	this->std_out = std_out;
+	this->std_err = std_err;
+	process_list.clear();
+}
+
+void Job::add_process(const Process& process) 
+{
+	process_list.push_back(process);
+}
+
+void Job::add_process(std::list<std::string> arguments) 
+{
+	process_list.emplace_back(arguments);
+}
 
 void Job::launch(bool foreground)
 {
@@ -12,7 +34,7 @@ void Job::launch(bool foreground)
 	for (auto process = process_list.begin(); process != process_list.end(); process++)
 	{
 		// Set up pipes, if necessary
-		if (process + 1 != process_list.end())
+		if (process != --process_list.end())
 		{
 			if (pipe(mypipe) < 0)
 			{
@@ -64,7 +86,7 @@ void Job::launch(bool foreground)
 		infile = mypipe[0];
 	}
 
-	format_info("launched");
+	//format_info("launched");
 
 	if (!Shell::is_interactive)
 		wait();
@@ -123,32 +145,6 @@ void Job::format_info(const char* status)
 	fprintf(stderr, "%ld (%s): %s\n", (long)pgid, status, command.data());
 }
 
-void Job::do_notification()
-{
-	// Update status information for child processes
-	Shell::update_status();
-
-	for (auto job = list.begin(); job != list.end(); job++)
-	{
-		/* If all processes have completed, tell the user the job has
-		 completed and delete it from the list of active jobs.  */
-		if (job->is_completed())
-		{
-			job->format_info("completed");
-			list.erase(job);
-			continue;
-		}
-
-		/* Notify the user about stopped jobs,
-		 marking them so that we won’t do this more than once.  */
-		else if (job->is_stopped() && !job->notified)
-		{
-			job->format_info("stopped");
-			job->notified = 1;
-		}
-	}
-}
-
 void Job::mark_as_running()
 {
 	for (Process& process : process_list)
@@ -178,8 +174,48 @@ bool Job::is_completed() const
 	return std::all_of(process_list.begin(), process_list.end(), [](const Process& process) -> bool { return process.is_completed(); });
 }
 
+void Job::clear() 
+{
+	auto it = std::find_if(list.begin(), list.end(), [this](const Job& job) -> bool { return this == &job; });
+
+	if (it != list.end())
+		list.erase(it);
+}
+
+Job& Job::add(std::string command, int std_in, int std_out, int std_err) 
+{
+	list.emplace_back(command, std_in, std_out, std_err);
+	return list.back();
+}
+
 Job* Job::find_job(pid_t pgid)
 {
 	auto it = std::find_if(list.begin(), list.end(), [pgid](const Job& job) -> bool { return job.pgid == pgid; });
 	return (it == list.end() ? nullptr : &(*it));
+}
+
+void Job::do_notification()
+{
+	// Update status information for child processes
+	Shell::update_status();
+
+	for (auto job = list.begin(); job != list.end(); job++)
+	{
+		/* If all processes have completed, tell the user the job has
+		 completed and delete it from the list of active jobs.  */
+		if (job->is_completed())
+		{
+			job->format_info("completed");
+			list.erase(job);
+			continue;
+		}
+
+		/* Notify the user about stopped jobs,
+		 marking them so that we won’t do this more than once.  */
+		else if (job->is_stopped() && !job->notified)
+		{
+			job->format_info("stopped");
+			job->notified = 1;
+		}
+	}
 }

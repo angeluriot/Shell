@@ -1,6 +1,15 @@
 #include "Process.hpp"
 #include "Shell.hpp"
 
+Process::Process(std::list<std::string> arguments) 
+{
+	this->arguments = arguments;
+	pid = 0;
+	completed = false;
+	stopped = false;
+	status = 0;
+}
+
 void Process::launch(pid_t pgid, int infile, int outfile, int errfile, bool foreground)
 {
 	if (Shell::is_interactive)
@@ -48,7 +57,7 @@ void Process::launch(pid_t pgid, int infile, int outfile, int errfile, bool fore
 	}
 
 	// Exec the new process. Make sure we exit
-	execvp(arguments[0], arguments);
+	execvp(arguments.front().data(), arguments_to_char());
 	perror("execvp");
 	exit(1);
 }
@@ -88,7 +97,7 @@ void Process::set_stopped(bool stopped)
 	this->stopped = stopped;
 }
 
-int Process::get_status()
+int Process::get_status() const
 {
 	return status;
 }
@@ -96,4 +105,21 @@ int Process::get_status()
 void Process::set_status(int status)
 {
 	this->status = status;
+}
+
+char*const* Process::arguments_to_char() const
+{
+	char** result = new char*[arguments.size() + 1];
+	int i = 0;
+
+	for (const std::string& argument : arguments)
+	{
+		result[i] = new char[argument.size() + 1];
+		strcpy(result[i], argument.data());
+		result[i][argument.size()] = '\0';
+		i++;
+	}
+
+	result[arguments.size()] = nullptr;
+	return result;
 }

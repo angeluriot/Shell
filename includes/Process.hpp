@@ -7,7 +7,7 @@ class Process
 {
 private:
 
-	char**						arguments;	// for exec
+	std::list<std::string>		arguments;	// for exec
 	pid_t						pid;		// process ID
 	bool						completed;	// true if process has completed
 	bool						stopped;	// true if process has stopped
@@ -17,6 +17,7 @@ public:
 
 								Process() = default;
 								Process(const Process& other) = default;
+								Process(std::list<std::string> arguments);
 
 	Process&					operator=(const Process& other) = default;
 
@@ -28,8 +29,9 @@ public:
 	bool						is_stopped() const;
 	void						stop();
 	void						set_stopped(bool stopped);
-	int							get_status();
+	int							get_status() const;
 	void						set_status(int status);
+	char*const*					arguments_to_char() const;
 };
 
 #endif

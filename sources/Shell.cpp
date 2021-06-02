@@ -13,9 +13,12 @@ void Shell::init()
 
 	if (is_interactive)
 	{
-		// Loop until we are in the foreground
-		while (tcgetpgrp(terminal) != (pgid = getpgrp()))
-			kill(-pgid, SIGTTIN);
+		if (!is_in_debug)
+		{
+			// Loop until we are in the foreground
+			while (tcgetpgrp(terminal) != (pgid = getpgrp()))
+				kill(-pgid, SIGTTIN);
+		}
 
 		// Ignore interactive and job-control signals
 		signal(SIGINT, SIG_IGN);
@@ -28,17 +31,20 @@ void Shell::init()
 		// Put ourselves in our own process group
 		pgid = getpid();
 
-		if (setpgid(pgid, pgid) < 0)
+		if (!is_in_debug)
 		{
-			perror("Couldn't put the shell in its own process group");
-			exit(1);
+			if (setpgid(pgid, pgid) < 0)
+			{
+				perror("Couldn't put the shell in its own process group");
+				exit(1);
+			}
+
+			// Grab control of the terminal
+			tcsetpgrp(terminal, pgid);
+
+			// Save default terminal attributes for shell
+			tcgetattr(terminal, &terminal_modes);
 		}
-
-		// Grab control of the terminal
-		tcsetpgrp(terminal, pgid);
-
-		// Save default terminal attributes for shell
-		tcgetattr(terminal, &terminal_modes);
 	}
 }
 

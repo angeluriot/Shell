@@ -3,6 +3,7 @@
 
 #include "libraries.hpp"
 #include "Job.hpp"
+#include "utils.hpp"
 
 class Shell
 {
