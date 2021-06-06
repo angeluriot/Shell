@@ -1,26 +1,36 @@
 #include "Process.hpp"
 #include "Job.hpp"
 #include "Shell.hpp"
-#include "Parser.hpp"
 
-int main(int argc, char** argv, char** env)
+int main()
 {
-	//Shell::init();
-
 	while (true)
 	{
+		Shell::show_prompt();
+
 		std::string command;
 		getline(std::cin, command);
 
-		std::list<std::string> arguments = Parser::separate_parts(command);
+		std::vector<std::string> arguments = Shell::separate_parts(command);
+
+		if (arguments.empty())
+			continue;
 
 		if (arguments.front() == "exit")
 			break;
 
-		Job& job = Job::add(command, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO);
-		job.add_process(arguments);
-		job.launch(true);
-		job.clear();
+		try
+		{
+			Shell::parse_command(arguments);
+		}
+
+		catch (const std::invalid_argument& e)
+		{
+			if (e.what() != "no argument")
+				std::cerr << e.what() << std::endl;
+		}
+
+		catch (const std::runtime_error& e) {}
 	}
 
 	return 0;

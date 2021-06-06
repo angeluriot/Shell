@@ -1,32 +1,17 @@
 #include "utils.hpp"
 
-bool is_in_debug = is_debugger();
-
-bool is_debugger()
+char*const* to_char_array(std::vector<std::string> string_array)
 {
-	char buf[4096];
+	char** result = new char*[string_array.size() + 1];
+	int i = 0;
 
-	const int status_fd = ::open("/proc/self/status", O_RDONLY);
-	if (status_fd == -1)
-		return false;
-
-	const ssize_t num_read = ::read(status_fd, buf, sizeof(buf) - 1);
-	if (num_read <= 0)
-		return false;
-
-	buf[num_read] = '\0';
-	constexpr char tracerPidString[] = "TracerPid:";
-	const auto tracer_pid_ptr = ::strstr(buf, tracerPidString);
-	if (!tracer_pid_ptr)
-		return false;
-
-	for (const char* characterPtr = tracer_pid_ptr + sizeof(tracerPidString) - 1; characterPtr <= buf + num_read; ++characterPtr)
+	for (const std::string& string : string_array)
 	{
-		if (::isspace(*characterPtr))
-			continue;
-		else
-			return ::isdigit(*characterPtr) != 0 && *characterPtr != '0';
+		result[i] = new char[string.size() + 1];
+		strcpy(result[i], string.data());
+		i++;
 	}
 
-	return false;
+	result[string_array.size()] = nullptr;
+	return result;
 }

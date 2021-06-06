@@ -7,31 +7,26 @@ class Process
 {
 private:
 
-	std::list<std::string>		arguments;	// for exec
 	pid_t						pid;		// process ID
-	bool						completed;	// true if process has completed
-	bool						stopped;	// true if process has stopped
 	int							status;		// reported status value
+	int							fd_in;		// file descriptor in
+	int							fd_out;		// file descriptor out
 
 public:
 
-								Process() = default;
+								Process();
 								Process(const Process& other) = default;
-								Process(std::list<std::string> arguments);
+								Process(const std::vector<std::string>& arguments);
 
 	Process&					operator=(const Process& other) = default;
 
-	void						launch(pid_t pgid, int infile, int outfile, int errfile, bool foreground);
+	void						launch(std::vector<std::string> arguments);
+	std::vector<std::string>	redirections(const std::vector<std::string>& arguments);
+	int							cd(const std::vector<std::string>& arguments);
 	pid_t						get_pid() const;
 	void						set_pid(pid_t pid);
-	bool						is_completed() const;
-	void						complete();
-	bool						is_stopped() const;
-	void						stop();
-	void						set_stopped(bool stopped);
 	int							get_status() const;
 	void						set_status(int status);
-	char*const*					arguments_to_char() const;
 };
 
 #endif

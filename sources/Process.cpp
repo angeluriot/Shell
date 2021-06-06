@@ -1,65 +1,196 @@
 #include "Process.hpp"
 #include "Shell.hpp"
 
-Process::Process(std::list<std::string> arguments) 
+Process::Process()
 {
-	this->arguments = arguments;
 	pid = 0;
-	completed = false;
-	stopped = false;
 	status = 0;
+	fd_in = STDIN_FILENO;
+	fd_out = STDOUT_FILENO;
 }
 
-void Process::launch(pid_t pgid, int infile, int outfile, int errfile, bool foreground)
+Process::Process(const std::vector<std::string>& arguments)
 {
-	if (Shell::is_interactive)
+	pid = 0;
+	status = 0;
+	fd_in = STDIN_FILENO;
+	fd_out = STDOUT_FILENO;
+	launch(arguments);
+}
+
+void Process::launch(std::vector<std::string> arguments)
+{
+	arguments = redirections(arguments);
+
+	if (arguments.empty())
+		throw std::invalid_argument("no argument");
+
+	if (arguments.front() == "cd")
 	{
-		/* Put the process into the process group and give the process group
-		 the terminal, if appropriate.
-		 This has to be done both by the shell and in the individual
-		 child processes because of potential race conditions. */
-		pid = getpid();
-
-		if (pgid == 0)
-			pgid = pid;
-
-		setpgid(pid, pgid);
-
-		if (foreground)
-			tcsetpgrp(Shell::terminal, pgid);
-
-		// Set the handling for job control signals back to the default
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		signal(SIGTSTP, SIG_DFL);
-		signal(SIGTTIN, SIG_DFL);
-		signal(SIGTTOU, SIG_DFL);
-		signal(SIGCHLD, SIG_DFL);
+		cd(arguments);
+		return;
 	}
 
-	// Set the standard input/output channels of the new process
-	if (infile != STDIN_FILENO)
+	pid = fork();
+
+	if (pid == -1)
 	{
-		dup2(infile, STDIN_FILENO);
-		close(infile);
+		perror("fork");
+		throw std::runtime_error("fork failed");
 	}
 
-	if (outfile != STDOUT_FILENO)
+	else if (pid == 0)
 	{
-		dup2(outfile, STDOUT_FILENO);
-		close(outfile);
+		if (fd_in != STDIN_FILENO)
+		{
+			close(STDIN_FILENO);
+
+			if (dup2(fd_in, STDIN_FILENO) == -1)
+				exit(errno);
+
+			close(fd_in);
+		}
+
+		if (fd_out != STDOUT_FILENO)
+		{
+			close(STDOUT_FILENO);
+
+			if (dup2(fd_out, STDOUT_FILENO) == -1)
+				exit(errno);
+
+			close(fd_out);
+		}
+
+		execvp(arguments.front().data(), to_char_array(arguments));
+
+		if (errno == ENOENT)
+			std::cerr << arguments.front() << ": command not found" << std::endl;
+
+		else
+			perror(arguments.front().data());
+
+		exit(ENOENT);
 	}
 
-	if (errfile != STDERR_FILENO)
+	else
+		waitpid(pid, &status, 0);
+}
+
+std::vector<std::string> Process::redirections(const std::vector<std::string>& arguments)
+{
+	if (arguments.empty() || arguments.back() == ">" || arguments.back() == "<" || arguments.back() == ">>")
+		throw std::invalid_argument("syntax error");
+
+	std::vector<std::string> result = {};
+
+	for (int i = 0; i < arguments.size(); i++)
 	{
-		dup2(errfile, STDERR_FILENO);
-		close(errfile);
+		if (arguments[i] == ">")
+		{
+			if (fd_out != STDOUT_FILENO)
+				close(fd_out);
+
+			fd_out = open(arguments[i + 1].data(), O_CREAT | O_WRONLY | O_TRUNC, 0664);
+
+			if (fd_out == -1)
+			{
+				perror("open");
+				throw std::runtime_error("open");
+			}
+
+			i++;
+		}
+
+		else if (arguments[i] == "<")
+		{
+			if (fd_in != STDIN_FILENO)
+				close(fd_in);
+
+			fd_in = open(arguments[i + 1].data(), O_RDONLY);
+
+			if (fd_in == -1)
+			{
+				perror("open");
+				throw std::runtime_error("open");
+			}
+
+			i++;
+		}
+
+		else if (arguments[i] == ">>")
+		{
+			if (fd_out != STDOUT_FILENO)
+				close(fd_out);
+
+			fd_out = open(arguments[i + 1].data(), O_CREAT | O_WRONLY | O_APPEND, 0664);
+
+			if (fd_out == -1)
+			{
+				perror("open");
+				throw std::runtime_error("open");
+			}
+
+			i++;
+		}
+
+		else
+			result.push_back(arguments[i]);
 	}
 
-	// Exec the new process. Make sure we exit
-	execvp(arguments.front().data(), arguments_to_char());
-	perror("execvp");
-	exit(1);
+	return result;
+}
+
+int Process::cd(const std::vector<std::string>& arguments)
+{
+	std::string old_pwd = std::string(std::filesystem::current_path());
+	std::string new_pwd;
+
+	if (arguments.size() > 2)
+	{
+		std::cerr << "cd: too many arguments" << std::endl;
+		return 1;
+	}
+
+	else if (arguments.size() == 1)
+	{
+		if (std::getenv("HOME") == nullptr)
+		{
+			std::cerr << "cd: HOME not set" << std::endl;
+			return 1;
+		}
+
+		new_pwd = getenv("HOME");
+	}
+
+	else if (arguments.back() == "-")
+	{
+		if (std::getenv("OLDPWD") == nullptr)
+		{
+			std::cerr << "cd: OLDPWD not set" << std::endl;
+			return 1;
+		}
+
+		new_pwd = getenv("OLDPWD");
+		write(fd_out, (new_pwd + '\n').data(), new_pwd.size() + 1);
+	}
+
+	else
+		new_pwd = arguments.back();
+
+	try
+	{
+		std::filesystem::current_path(new_pwd);
+	}
+
+	catch (...)
+	{
+		std::cerr << "cd: " << arguments.back() << ": No such file or directory" << std::endl;
+		return 1;
+	}
+
+	setenv("OLDPWD", old_pwd.data(), 1);
+	setenv("PWD", std::string(std::filesystem::current_path()).data(), 1);
+	return 0;
 }
 
 pid_t Process::get_pid() const
@@ -72,31 +203,6 @@ void Process::set_pid(pid_t pid)
 	this->pid = pid;
 }
 
-bool Process::is_completed() const
-{
-	return completed;
-}
-
-void Process::complete()
-{
-	completed = true;
-}
-
-bool Process::is_stopped() const
-{
-	return stopped;
-}
-
-void Process::stop()
-{
-	stopped = true;
-}
-
-void Process::set_stopped(bool stopped)
-{
-	this->stopped = stopped;
-}
-
 int Process::get_status() const
 {
 	return status;
@@ -105,21 +211,4 @@ int Process::get_status() const
 void Process::set_status(int status)
 {
 	this->status = status;
-}
-
-char*const* Process::arguments_to_char() const
-{
-	char** result = new char*[arguments.size() + 1];
-	int i = 0;
-
-	for (const std::string& argument : arguments)
-	{
-		result[i] = new char[argument.size() + 1];
-		strcpy(result[i], argument.data());
-		result[i][argument.size()] = '\0';
-		i++;
-	}
-
-	result[arguments.size()] = nullptr;
-	return result;
 }

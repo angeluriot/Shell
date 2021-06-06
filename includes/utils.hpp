@@ -3,8 +3,6 @@
 
 #include "libraries.hpp"
 
-extern bool is_in_debug;
-
-bool is_debugger();
+char*const* to_char_array(std::vector<std::string> string_array);
 
 #endif

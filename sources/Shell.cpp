@@ -1,100 +1,41 @@
 #include "Shell.hpp"
 
-pid_t	Shell::pgid;
-termios	Shell::terminal_modes;
-int		Shell::terminal;
-int		Shell::is_interactive;
+std::list<Job> Shell::job_list = {};
 
-void Shell::init()
+void Shell::show_prompt()
 {
-	// See if we are running interactively
-	terminal = STDIN_FILENO;
-	is_interactive = isatty(terminal);
-
-	if (is_interactive)
-	{
-		if (!is_in_debug)
-		{
-			// Loop until we are in the foreground
-			while (tcgetpgrp(terminal) != (pgid = getpgrp()))
-				kill(-pgid, SIGTTIN);
-		}
-
-		// Ignore interactive and job-control signals
-		signal(SIGINT, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
-		signal(SIGTSTP, SIG_IGN);
-		signal(SIGTTIN, SIG_IGN);
-		signal(SIGTTOU, SIG_IGN);
-		signal(SIGCHLD, SIG_IGN);
-
-		// Put ourselves in our own process group
-		pgid = getpid();
-
-		if (!is_in_debug)
-		{
-			if (setpgid(pgid, pgid) < 0)
-			{
-				perror("Couldn't put the shell in its own process group");
-				exit(1);
-			}
-
-			// Grab control of the terminal
-			tcsetpgrp(terminal, pgid);
-
-			// Save default terminal attributes for shell
-			tcgetattr(terminal, &terminal_modes);
-		}
-	}
+	std::cout << std::string(std::filesystem::current_path()) << "> " << std::flush;
 }
 
-bool Shell::mark_process_status(pid_t pid, int status)
+std::vector<std::string> Shell::separate_parts(std::string command)
 {
-	if (pid > 0)
+	if (command.empty())
+		return {};
+
+	std::vector<std::string> result = {};
+
+	while (true)
 	{
-		// Update the record for the process
-		for (Job& job : Job::list)
-			for (Process& process : job.process_list)
-				if (process.get_pid() == pid)
-				{
-					process.set_status(status);
+		while (command.front() == ' ' || command.front() == '\t')
+			command = command.substr(1);
 
-					if (WIFSTOPPED(status))
-						process.stop();
+		size_t end = command.find_first_of(" \t");
 
-					else
-					{
-						process.complete();
-
-						if (WIFSIGNALED(status))
-							fprintf(stderr, "%d: Terminated by signal %d.\n", (int)pid, WTERMSIG(process.get_status()));
-					}
-
-					return true;
-				}
-
-			fprintf(stderr, "No child process %d.\n", pid);
-			return false;
+		if (end == std::string::npos)
+		{
+			result.push_back(command);
+			break;
 		}
 
-	else if (pid == 0 || errno == ECHILD)
-		// No processes ready to report
-		return false;
-
-	else
-	{
-		// Other weird errors
-		perror("waitpid");
-		return false;
+		result.push_back(command.substr(0, end));
+		command = command.substr(end);
 	}
+
+	return result;
 }
 
-void Shell::update_status()
+void Shell::parse_command(const std::vector<std::string>& arguments)
 {
-	int status;
-	pid_t pid;
-
-	do
-		pid = waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG);
-	while (!mark_process_status(pid, status));
+	job_list.clear();
+	job_list.emplace_back(arguments);
 }
