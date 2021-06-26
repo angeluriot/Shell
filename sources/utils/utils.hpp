@@ -1,7 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "libraries.hpp"
+#include "utils/libraries.hpp"
 
 /**
  * @brief Convert an std::vector of std::string to a char* array (it's a copy that must be free)
