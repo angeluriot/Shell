@@ -1,7 +1,7 @@
 #ifndef LIBRARIES_HPP
 #define LIBRARIES_HPP
 
-// C libraries
+// C standard libraries
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>

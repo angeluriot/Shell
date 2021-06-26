@@ -1,27 +1,34 @@
-#include "Process.hpp"
-#include "Job.hpp"
-#include "Shell.hpp"
+#include "process/Process.hpp"
+#include "job/Job.hpp"
+#include "shell/Shell.hpp"
 
 int main()
 {
+	// App loop
 	while (true)
 	{
+		// Show prompt
 		Shell::show_prompt();
 
+		// Get the user command
 		std::string command;
 		getline(std::cin, command);
 
+		// Separate command parts
 		std::vector<std::string> arguments = Shell::separate_parts(command);
 
+		// Only enter case
 		if (arguments.empty())
 			continue;
 
+		// Exit command
 		if (arguments.front() == "exit")
 			break;
 
+		// Parse and execute the command
 		try
 		{
-			Shell::parse_command(arguments);
+			Shell::launch_command(arguments);
 		}
 
 		catch (const std::invalid_argument& e)
@@ -33,5 +40,5 @@ int main()
 		catch (const std::runtime_error& e) {}
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
