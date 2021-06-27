@@ -21,15 +21,15 @@ Ce dépôt contient le code source d'un shell simplifié.
 
 * Le lancement de programmes :
   * Les programmes de base (exemples : `pwd`, `ls`, `cat`, etc...).
-  * N'importe quel programme avec *`path`*`/`*`name`* (exemple : `./a.out`).
+  * N'importe quel programme avec `path/name` (exemple : `./a.out`).
 
 <br/>
 
-* La gestion du dossier courant avec `cd` (exemples : `cd ..`, `cd` *`directory`*, `cd -`, etc...).
+* La gestion du dossier courant avec `cd` (exemples : `cd ..`, `cd directory`, `cd -`, etc...).
 
 <br/>
 
-* Les redirections d'entrée et de sortie de processus avec `<` *`filename`*, `>` *`filename`* ou `>>` *`filename`* (exemple : `echo bonjour > test.txt`).
+* Les redirections d'entrée et de sortie de processus avec `< filename`, `> filename` ou `>> filename` (exemple : `echo bonjour > test.txt`).
 
 <br/>
 
