@@ -14,6 +14,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <dirent.h>
 
 // C++ standard libraries
 #include <vector>
