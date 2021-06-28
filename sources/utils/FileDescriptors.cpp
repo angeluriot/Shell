@@ -21,3 +21,9 @@ void FileDescriptors::clear()
 	in = STDIN_FILENO;
 	out = STDOUT_FILENO;
 }
+
+void FileDescriptors::close()
+{
+	::close(in);
+	::close(out);
+}

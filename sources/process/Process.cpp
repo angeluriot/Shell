@@ -5,37 +5,23 @@ Process::Process()
 {
 	pid = 0;
 	status = 0;
+	parent = nullptr;
 }
 
-Process::Process(FileDescriptors fd)
+Process::Process(const std::vector<std::string>& arguments, bool pipe, Job* parent)
 {
 	pid = 0;
 	status = 0;
-	this->fd = fd;
-}
-
-Process::Process(const std::vector<std::string>& arguments, bool pipe)
-{
-	pid = 0;
-	status = 0;
+	this->parent = parent;
 	launch(arguments, FileDescriptors(), pipe);
 }
 
-Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe)
+Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe, Job* parent)
 {
 	pid = 0;
 	status = 0;
+	this->parent = parent;
 	launch(arguments, fd, pipe);
-}
-
-Process::~Process()
-{
-	// Close file descriptors
-	if (fd.in != STDIN_FILENO)
-		close(fd.in);
-
-	if (fd.out != STDOUT_FILENO)
-		close(fd.out);
 }
 
 void Process::launch(std::vector<std::string> arguments, bool pipe)
@@ -68,25 +54,15 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 	else if (pid == 0)
 	{
 		// Change file descriptors of the process
-		if (this->fd.in != STDIN_FILENO)
-		{
-			close(STDIN_FILENO);
+		if (fd.in != STDIN_FILENO && dup2(fd.in, STDIN_FILENO) == -1)
+			exit(errno);
 
-			if (dup2(this->fd.in, STDIN_FILENO) == -1)
-				exit(errno);
+		if (fd.out != STDOUT_FILENO && dup2(fd.out, STDOUT_FILENO) == -1)
+			exit(errno);
 
-			close(this->fd.in);
-		}
-
-		if (this->fd.out != STDOUT_FILENO)
-		{
-			close(STDOUT_FILENO);
-
-			if (dup2(this->fd.out, STDOUT_FILENO) == -1)
-				exit(errno);
-
-			close(this->fd.out);
-		}
+		// Close file descriptors
+		close_fd();
+		parent->close_fd();
 
 		// Cd
 		if (arguments.front() == "cd")
@@ -109,6 +85,9 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 
 		exit(EXIT_SUCCESS);
 	}
+
+	// Parent case
+	close_fd();
 }
 
 void Process::launch(std::vector<std::string> arguments, FileDescriptors fd, bool pipe)
@@ -215,4 +194,13 @@ void Process::set_status(int status)
 void Process::wait()
 {
 	waitpid(pid, &status, 0);
+}
+
+void Process::close_fd()
+{
+	if (fd.in != STDIN_FILENO)
+		close(fd.in);
+
+	if (fd.out != STDOUT_FILENO)
+		close(fd.out);
 }

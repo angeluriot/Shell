@@ -5,6 +5,8 @@
 #include "utils/utils.hpp"
 #include "utils/FileDescriptors.hpp"
 
+class Job;
+
 /**
  * @brief Class representing a process launched
  *
@@ -12,6 +14,12 @@
 class Process
 {
 private:
+
+	/**
+	 * @brief The parent Job
+	 *
+	 */
+	Job*						parent;
 
 	/**
 	 * @brief Process ID
@@ -47,19 +55,13 @@ public:
 								Process(const Process& other) = default;
 
 	/**
-	 * @brief Construct a process from file descriptors
-	 *
-	 * @param fd the file descriptors
-	 */
-								Process(FileDescriptors fd);
-
-	/**
 	 * @brief Construct a process from these arguments
 	 *
 	 * @param arguments the input arguments
 	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, bool pipe);
+								Process(const std::vector<std::string>& arguments, bool pipe, Job* parent);
 
 	/**
 	 * @brief Construct a process from theses arguments and file descriptors
@@ -67,14 +69,9 @@ public:
 	 * @param arguments the input arguments
 	 * @param fd the file descriptors
 	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe);
-
-	/**
-	 * @brief Destroy the process
-	 *
-	 */
-								~Process();
+								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe, Job* parent);
 
 	/**
 	 * @brief Equal operator
@@ -175,6 +172,12 @@ public:
 	 *
 	 */
 	void						wait();
+
+	/**
+	 * @brief Close file descriptors
+	 *
+	 */
+	void						close_fd();
 };
 
 #endif
