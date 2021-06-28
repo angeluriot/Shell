@@ -33,11 +33,20 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 	if (arguments.empty())
 		throw std::invalid_argument("no argument");
 
-	// Cd
-	if (!pipe && arguments.front() == "cd")
+	// Builtins on parent process
+	if (!pipe)
 	{
-		cd(arguments, false);
-		return;
+		// Cd
+		if (arguments.front() == "cd")
+			cd(arguments, false);
+
+		// Cp
+		else if (arguments.front() == "cp")
+			cp(arguments, false);
+
+		// Mkdir
+		else if (arguments.front() == "mkdir")
+			mkdir(arguments, false);
 	}
 
 	// Fork
@@ -64,20 +73,21 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 		close_fd();
 		parent->close_fd();
 
-		// Cd
-		if (arguments.front() == "cd")
+		// Builtins on child process
+		if (pipe)
 		{
-			if (pipe)
+			// Cd
+			if (arguments.front() == "cd")
 				cd(arguments, true);
+
+			// Cp
+			else if (arguments.front() == "cp")
+				cp(arguments, true);
+
+			// Mkdir
+			else if (arguments.front() == "mkdir")
+				mkdir(arguments, true);
 		}
-
-		// Cp
-		else if (arguments.front() == "cp")
-			cp(arguments);
-
-		// Mkdir
-		else if (arguments.front() == "mkdir")
-			mkdir(arguments);
 
 		// Binary
 		else

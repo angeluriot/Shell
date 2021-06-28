@@ -22,10 +22,7 @@ Ce dépôt contient le code source d'un shell simplifié.
 * Le lancement de programmes :
   * Les programmes de base (exemples : `pwd`, `ls`, `cat`, etc...).
   * N'importe quel programme avec `path/name` (exemple : `./a.out`).
-
-<br/>
-
-* La gestion du dossier courant avec `cd` (exemples : `cd ..`, `cd directory`, `cd -`, etc...).
+  * Builtins : `cd`, `cp` et `mkdir`.
 
 <br/>
 

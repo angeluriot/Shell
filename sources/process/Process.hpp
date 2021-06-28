@@ -147,17 +147,19 @@ public:
 	 * @brief The cp command of Shell
 	 *
 	 * @param arguments "cp" and the file to copy
+	 * @param child true if it's in the child process, false otherwise
 	 * @return false on failure and true otherwise
 	 */
-	void						cp(const std::vector<std::string>& arguments);
+	void						cp(const std::vector<std::string>& arguments, bool child);
 
 	/**
 	 * @brief The mkdir command of Shell
 	 *
 	 * @param arguments "mkdir" and the directory to create
+	 * @param child true if it's in the child process, false otherwise
 	 * @return false on failure and true otherwise
 	 */
-	void						mkdir(const std::vector<std::string>& arguments);
+	void						mkdir(const std::vector<std::string>& arguments, bool child);
 
 	/**
 	 * @brief Run a binary
