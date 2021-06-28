@@ -8,23 +8,23 @@ Process::Process()
 	parent = nullptr;
 }
 
-Process::Process(const std::vector<std::string>& arguments, bool pipe, Job* parent)
+Process::Process(const std::vector<std::string>& arguments, bool child, Job* parent)
 {
 	pid = 0;
 	status = 0;
 	this->parent = parent;
-	launch(arguments, FileDescriptors(), pipe);
+	launch(arguments, FileDescriptors(), child);
 }
 
-Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe, Job* parent)
+Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool child, Job* parent)
 {
 	pid = 0;
 	status = 0;
 	this->parent = parent;
-	launch(arguments, fd, pipe);
+	launch(arguments, fd, child);
 }
 
-void Process::launch(std::vector<std::string> arguments, bool pipe)
+void Process::launch(std::vector<std::string> arguments, bool child)
 {
 	// Handle redirections
 	arguments = redirections(arguments);
@@ -34,7 +34,7 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 		throw std::invalid_argument("no argument");
 
 	// Builtins on parent process
-	if (!pipe)
+	if (!child)
 	{
 		// Cd
 		if (arguments.front() == "cd")
@@ -74,7 +74,7 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 		parent->close_fd();
 
 		// Builtins on child process
-		if (pipe)
+		if (child)
 		{
 			// Cd
 			if (arguments.front() == "cd")
@@ -100,10 +100,10 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 	close_fd();
 }
 
-void Process::launch(std::vector<std::string> arguments, FileDescriptors fd, bool pipe)
+void Process::launch(std::vector<std::string> arguments, FileDescriptors fd, bool child)
 {
 	this->fd = fd;
-	launch(arguments, pipe);
+	launch(arguments, child);
 }
 
 std::vector<std::string> Process::redirections(const std::vector<std::string>& arguments)
