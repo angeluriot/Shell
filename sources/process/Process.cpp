@@ -38,15 +38,27 @@ void Process::launch(std::vector<std::string> arguments, bool child)
 	{
 		// Cd
 		if (arguments.front() == "cd")
+		{
 			cd(arguments, false);
+			close_fd();
+			return;
+		}
 
 		// Cp
 		else if (arguments.front() == "cp")
+		{
 			cp(arguments, false);
+			close_fd();
+			return;
+		}
 
 		// Mkdir
 		else if (arguments.front() == "mkdir")
+		{
 			mkdir(arguments, false);
+			close_fd();
+			return;
+		}
 	}
 
 	// Fork
@@ -73,21 +85,17 @@ void Process::launch(std::vector<std::string> arguments, bool child)
 		close_fd();
 		parent->close_fd();
 
-		// Builtins on child process
-		if (child)
-		{
-			// Cd
-			if (arguments.front() == "cd")
-				cd(arguments, true);
+		// Cd
+		if (arguments.front() == "cd")
+			cd(arguments, true);
 
-			// Cp
-			else if (arguments.front() == "cp")
-				cp(arguments, true);
+		// Cp
+		else if (arguments.front() == "cp")
+			cp(arguments, true);
 
-			// Mkdir
-			else if (arguments.front() == "mkdir")
-				mkdir(arguments, true);
-		}
+		// Mkdir
+		else if (arguments.front() == "mkdir")
+			mkdir(arguments, true);
 
 		// Binary
 		else

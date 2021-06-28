@@ -2,28 +2,14 @@
 
 void Process::mkdir(const std::vector<std::string>& arguments, bool child)
 {
-	if (arguments.size() == 2)
-	{
-		char *path = new char[std::filesystem::current_path().string().length() + arguments.back().length()];
-		strcpy(path, std::filesystem::current_path().c_str());
-		strcat(path, "/");
-		strcat(path, arguments.back().c_str());
-		::mkdir(path, 0777);
-	}
-
 	// Too many arguments case
-	else if (arguments.size() > 2)
-	{
-		throw std::invalid_argument("cd: too many arguments");
-	}
+	if (arguments.size() > 2)
+		show_error("mkdir: too many arguments", child);
 
 	// Missing argument case
-	else if (arguments.size() == 1)
-	{
-		throw std::invalid_argument("mkdir: missing directory name");
-	}
+	else if (arguments.size() < 2)
+		show_error("mkdir: missing directory name", child);
 
-	
-
-	exit(EXIT_FAILURE);
+	else
+		::mkdir(arguments.back().data(), 0777);
 }

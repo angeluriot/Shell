@@ -7,31 +7,13 @@ void Process::cd(const std::vector<std::string>& arguments, bool child)
 
 	// Too many arguments case
 	if (arguments.size() > 2)
-	{
-		if (child)
-		{
-			std::cerr << "cd: too many arguments" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		else
-			throw std::invalid_argument("cd: too many arguments");
-	}
+		show_error("cd: too many arguments", child);
 
 	// Handle cd without argument
 	else if (arguments.size() == 1)
 	{
 		if (std::getenv("HOME") == nullptr)
-		{
-			if (child)
-			{
-				std::cerr << "cd: HOME not set" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-
-			else
-				throw std::invalid_argument("cd: HOME not set");
-		}
+			show_error("cd: HOME not set", child);
 
 		new_pwd = getenv("HOME");
 	}
@@ -40,16 +22,7 @@ void Process::cd(const std::vector<std::string>& arguments, bool child)
 	else if (arguments.back() == "-")
 	{
 		if (std::getenv("OLDPWD") == nullptr)
-		{
-			if (child)
-			{
-				std::cerr << "cd: OLDPWD not set" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-
-			else
-				throw std::invalid_argument("cd: OLDPWD not set");
-		}
+			show_error("cd: OLDPWD not set", child);
 
 		new_pwd = getenv("OLDPWD");
 		write(fd.out, (new_pwd + '\n').data(), new_pwd.size() + 1);
@@ -66,14 +39,7 @@ void Process::cd(const std::vector<std::string>& arguments, bool child)
 
 	catch (...)
 	{
-		if (child)
-		{
-			std::cerr << "cd: " << arguments.back() << ": No such file or directory" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		else
-			throw std::invalid_argument("cd: " + arguments.back() + ": No such file or directory");
+		show_error("cd: " + arguments.back() + ": No such file or directory", child);
 	}
 
 	setenv("OLDPWD", old_pwd.data(), 1);

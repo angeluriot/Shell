@@ -1,7 +1,39 @@
 #include "process/Process.hpp"
 
 /**
- * @brief Copy a file (exit on failure)
+ * @brief Check if two paths are the same file
+ *
+ * @param input_file the input file path
+ * @param output_file the output file path
+ * @param child true if the process is in a child process
+ */
+void check_same_files(const std::filesystem::path& input_file, const std::filesystem::path& output_file, bool child)
+{
+	std::string input_path = std::filesystem::absolute(input_file);
+	std::string output_path;
+
+	try
+	{
+		output_path = std::filesystem::absolute(output_file);
+	}
+
+	catch (...)
+	{
+		return;
+	}
+
+	if (input_path == output_path)
+	{
+		if (std::filesystem::is_directory(input_file))
+			show_error("cp: input directory is output directory", child);
+
+		else
+			show_error("cp: input file is output file", child);
+	}
+}
+
+/**
+ * @brief Copy a file
  *
  * @param input_file the input file name
  * @param output_file the output file name
@@ -9,8 +41,8 @@
 void copy_file(const std::string& input_file, const std::string& output_file)
 {
 	// Open source and destination files
-	int src_desc = open(input_file.c_str(), O_RDONLY);
-	int dest_desc = open(output_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+	int src_desc = open(input_file.data(), O_RDONLY);
+	int dest_desc = open(output_file.data(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
 	// Check open errors
 	if (src_desc < 0 || dest_desc < 0)
@@ -35,7 +67,7 @@ void copy_file(const std::string& input_file, const std::string& output_file)
 		exit(errno);
 	}
 
-	while (1)
+	while (true)
 	{
 		// Copy data from the input file
 		char buffer[4096];
@@ -61,38 +93,15 @@ void copy_file(const std::string& input_file, const std::string& output_file)
 }
 
 /**
- * @brief Join a directory path with a file name (exit on failure)
+ * @brief Join a directory path with a file name
  *
  * @param directory the directory path
  * @param file the file name
  * @return the full path to the file
  */
-char* path_join(const std::string& directory, const std::string& file)
+std::string path_join(const std::string& directory, const std::string& file)
 {
-	// Set the length of the result
-	size_t directory_length = directory.length();
-	char* result = new char[directory_length + file.length() + 1 + (directory_length != 0 && directory[directory_length - 1] != '/')];
-
-	// Check malloc
-	if (result == NULL)
-	{
-		perror("malloc");
-		exit(errno);
-	}
-
-	// Check if directory is empty
-	if (directory_length == 0)
-		return strcpy(result, file.c_str());
-
-	// Add directory to the result
-	strcpy(result, directory.c_str());
-
-	if (directory[directory_length - 1] != '/')
-		strcat(result, "/");
-
-	// Add file to the result
-	strcat(result, file.c_str());
-	return result;
+	return directory + (directory.back() == '/' ? "" : "/") + file;
 }
 
 /**
@@ -152,18 +161,16 @@ void copy_directory(const std::string& input_directory, const std::string& outpu
 		if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
 		{
 			struct stat input_stat;
-			char* input_name = path_join(input_directory, ent->d_name);
-			char* output_name = path_join(output_directory, ent->d_name);
-			stat(input_name, &input_stat);
+			std::string input_name = path_join(input_directory, ent->d_name);
+			std::string output_name = path_join(output_directory, ent->d_name);
+			stat(input_name.data(), &input_stat);
 
 			// Copy the file or the directory
 			if (S_ISDIR(input_stat.st_mode))
 				copy_directory(input_name, output_name);
+
 			else
 				copy_file(input_name, output_name);
-
-			free(input_name);
-			free(output_name);
 		}
 
 		// Get the next file/directory in the directory
@@ -173,65 +180,32 @@ void copy_directory(const std::string& input_directory, const std::string& outpu
 	closedir(directory);
 }
 
-/**
- * @brief Check if two paths are the same file
- *
- * @param input_file the input file path
- * @param output_file the output file path
- * @return 1 if they are the same and 0 if not
- */
-int check_same_files(const char* input_file, const char* output_file)
+void Process::cp(const std::vector<std::string>& arguments, bool child)
 {
-	// Check if the output file exist
-	struct stat output_stat;
+	// Too many arguments case
+	if (arguments.size() > 3)
+		show_error("cp: too many arguments", child);
 
-	if (stat(output_file, &output_stat) < 0)
-		return 0;
+	// Missing argument case
+	else if (arguments.size() < 3)
+		show_error("cp: missing arguments", child);
 
-	// Get absolute paths
-	char* input_str = realpath(input_file, NULL);
-	char* output_str = realpath(output_file, NULL);
-
-	// Check realpath errors
-	if (input_str == NULL || output_str == NULL)
-	{
-		perror("realpath");
-		exit(errno);
-	}
-
-	// Check if absolute paths are the same
-	int result = 1 - strcmp(input_str, output_str);
-	free(input_str);
-	free(output_str);
-	return result;
-}
-
-void Process::cp(const std::vector<std::string>& arguments)
-{
 	if (arguments.size() == 3)
 	{
-		// Check if source and destination are the sames
-		if (check_same_files(arguments.at(1).c_str(), arguments.at(2).c_str()))
-		{
-			fprintf(stderr, "error: input file is output file\n");
-			exit(1);
-		}
+		// Check if source exists
+		if (!std::filesystem::exists(arguments[1]))
+			show_error("cp: cannot stat '" + arguments[1] + "': No such file or directory", child);
 
-		struct stat input_stat;
-		stat(arguments.at(1).c_str(), &input_stat);
+		// Check if source and destination are the sames
+		check_same_files(arguments[1], arguments.back(), child);
 
 		// Copy the file/directory
-		if (S_ISDIR(input_stat.st_mode))
-			copy_directory(arguments.at(1), arguments.at(2));
+		if (std::filesystem::is_directory(arguments[1]))
+			copy_directory(arguments[1], arguments.back());
+
 		else
-			copy_file(arguments.at(1), arguments.at(2));
+			copy_file(arguments[1], arguments.back());
 	}
-
-	else if (arguments.size() < 3)
-		fprintf(stderr, "error: missing arguments\n");
-
-	else if (arguments.size() > 3)
-		fprintf(stderr, "error: too many arguments\n");
 }
 
 
