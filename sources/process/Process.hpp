@@ -58,20 +58,20 @@ public:
 	 * @brief Construct a process from these arguments
 	 *
 	 * @param arguments the input arguments
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, bool pipe, Job* parent);
+								Process(const std::vector<std::string>& arguments, bool child, Job* parent);
 
 	/**
 	 * @brief Construct a process from theses arguments and file descriptors
 	 *
 	 * @param arguments the input arguments
 	 * @param fd the file descriptors
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe, Job* parent);
+								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool child, Job* parent);
 
 	/**
 	 * @brief Equal operator
@@ -85,18 +85,18 @@ public:
 	 * @brief Launch the process from these arguments
 	 *
 	 * @param arguments the input arguments
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 */
-	void						launch(std::vector<std::string> arguments, bool pipe);
+	void						launch(std::vector<std::string> arguments, bool child);
 
 	/**
 	 * @brief Launch the process from theses arguments and file descriptors
 	 *
 	 * @param arguments the input arguments
 	 * @param fd the file descriptors
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 */
-	void						launch(std::vector<std::string> arguments, FileDescriptors fd, bool pipe);
+	void						launch(std::vector<std::string> arguments, FileDescriptors fd, bool child);
 
 	/**
 	 * @brief Change file descriptors to handle redirections in the command
