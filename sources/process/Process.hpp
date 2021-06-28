@@ -5,6 +5,8 @@
 #include "utils/utils.hpp"
 #include "utils/FileDescriptors.hpp"
 
+class Job;
+
 /**
  * @brief Class representing a process launched
  *
@@ -12,6 +14,12 @@
 class Process
 {
 private:
+
+	/**
+	 * @brief The parent Job
+	 *
+	 */
+	Job*						parent;
 
 	/**
 	 * @brief Process ID
@@ -47,34 +55,23 @@ public:
 								Process(const Process& other) = default;
 
 	/**
-	 * @brief Construct a process from file descriptors
-	 *
-	 * @param fd the file descriptors
-	 */
-								Process(FileDescriptors fd);
-
-	/**
 	 * @brief Construct a process from these arguments
 	 *
 	 * @param arguments the input arguments
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
+	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, bool pipe);
+								Process(const std::vector<std::string>& arguments, bool child, Job* parent);
 
 	/**
 	 * @brief Construct a process from theses arguments and file descriptors
 	 *
 	 * @param arguments the input arguments
 	 * @param fd the file descriptors
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
+	 * @param parent the Job parent
 	 */
-								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe);
-
-	/**
-	 * @brief Destroy the process
-	 *
-	 */
-								~Process();
+								Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool child, Job* parent);
 
 	/**
 	 * @brief Equal operator
@@ -88,18 +85,18 @@ public:
 	 * @brief Launch the process from these arguments
 	 *
 	 * @param arguments the input arguments
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 */
-	void						launch(std::vector<std::string> arguments, bool pipe);
+	void						launch(std::vector<std::string> arguments, bool child);
 
 	/**
 	 * @brief Launch the process from theses arguments and file descriptors
 	 *
 	 * @param arguments the input arguments
 	 * @param fd the file descriptors
-	 * @param pipe true if the process is in a pipeline, false otherwise
+	 * @param child true if the process will be launch in a child process
 	 */
-	void						launch(std::vector<std::string> arguments, FileDescriptors fd, bool pipe);
+	void						launch(std::vector<std::string> arguments, FileDescriptors fd, bool child);
 
 	/**
 	 * @brief Change file descriptors to handle redirections in the command
@@ -150,17 +147,19 @@ public:
 	 * @brief The cp command of Shell
 	 *
 	 * @param arguments "cp" and the file to copy
+	 * @param child true if it's in the child process, false otherwise
 	 * @return false on failure and true otherwise
 	 */
-	void						cp(const std::vector<std::string>& arguments);
+	void						cp(const std::vector<std::string>& arguments, bool child);
 
 	/**
 	 * @brief The mkdir command of Shell
 	 *
 	 * @param arguments "mkdir" and the directory to create
+	 * @param child true if it's in the child process, false otherwise
 	 * @return false on failure and true otherwise
 	 */
-	void						mkdir(const std::vector<std::string>& arguments);
+	void						mkdir(const std::vector<std::string>& arguments, bool child);
 
 	/**
 	 * @brief Run a binary
@@ -175,6 +174,12 @@ public:
 	 *
 	 */
 	void						wait();
+
+	/**
+	 * @brief Close file descriptors
+	 *
+	 */
+	void						close_fd();
 };
 
 #endif

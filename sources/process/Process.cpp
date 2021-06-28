@@ -5,40 +5,26 @@ Process::Process()
 {
 	pid = 0;
 	status = 0;
+	parent = nullptr;
 }
 
-Process::Process(FileDescriptors fd)
+Process::Process(const std::vector<std::string>& arguments, bool child, Job* parent)
 {
 	pid = 0;
 	status = 0;
-	this->fd = fd;
+	this->parent = parent;
+	launch(arguments, FileDescriptors(), child);
 }
 
-Process::Process(const std::vector<std::string>& arguments, bool pipe)
+Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool child, Job* parent)
 {
 	pid = 0;
 	status = 0;
-	launch(arguments, FileDescriptors(), pipe);
+	this->parent = parent;
+	launch(arguments, fd, child);
 }
 
-Process::Process(const std::vector<std::string>& arguments, FileDescriptors fd, bool pipe)
-{
-	pid = 0;
-	status = 0;
-	launch(arguments, fd, pipe);
-}
-
-Process::~Process()
-{
-	// Close file descriptors
-	if (fd.in != STDIN_FILENO)
-		close(fd.in);
-
-	if (fd.out != STDOUT_FILENO)
-		close(fd.out);
-}
-
-void Process::launch(std::vector<std::string> arguments, bool pipe)
+void Process::launch(std::vector<std::string> arguments, bool child)
 {
 	// Handle redirections
 	arguments = redirections(arguments);
@@ -47,11 +33,20 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 	if (arguments.empty())
 		throw std::invalid_argument("no argument");
 
-	// Cd
-	if (!pipe && arguments.front() == "cd")
+	// Builtins on parent process
+	if (!child)
 	{
-		cd(arguments, false);
-		return;
+		// Cd
+		if (arguments.front() == "cd")
+			cd(arguments, false);
+
+		// Cp
+		else if (arguments.front() == "cp")
+			cp(arguments, false);
+
+		// Mkdir
+		else if (arguments.front() == "mkdir")
+			mkdir(arguments, false);
 	}
 
 	// Fork
@@ -68,40 +63,31 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 	else if (pid == 0)
 	{
 		// Change file descriptors of the process
-		if (this->fd.in != STDIN_FILENO)
+		if (fd.in != STDIN_FILENO && dup2(fd.in, STDIN_FILENO) == -1)
+			exit(errno);
+
+		if (fd.out != STDOUT_FILENO && dup2(fd.out, STDOUT_FILENO) == -1)
+			exit(errno);
+
+		// Close file descriptors
+		close_fd();
+		parent->close_fd();
+
+		// Builtins on child process
+		if (child)
 		{
-			close(STDIN_FILENO);
-
-			if (dup2(this->fd.in, STDIN_FILENO) == -1)
-				exit(errno);
-
-			close(this->fd.in);
-		}
-
-		if (this->fd.out != STDOUT_FILENO)
-		{
-			close(STDOUT_FILENO);
-
-			if (dup2(this->fd.out, STDOUT_FILENO) == -1)
-				exit(errno);
-
-			close(this->fd.out);
-		}
-
-		// Cd
-		if (arguments.front() == "cd")
-		{
-			if (pipe)
+			// Cd
+			if (arguments.front() == "cd")
 				cd(arguments, true);
+
+			// Cp
+			else if (arguments.front() == "cp")
+				cp(arguments, true);
+
+			// Mkdir
+			else if (arguments.front() == "mkdir")
+				mkdir(arguments, true);
 		}
-
-		// Cp
-		else if (arguments.front() == "cp")
-			cp(arguments);
-
-		// Mkdir
-		else if (arguments.front() == "mkdir")
-			mkdir(arguments);
 
 		// Binary
 		else
@@ -109,12 +95,15 @@ void Process::launch(std::vector<std::string> arguments, bool pipe)
 
 		exit(EXIT_SUCCESS);
 	}
+
+	// Parent case
+	close_fd();
 }
 
-void Process::launch(std::vector<std::string> arguments, FileDescriptors fd, bool pipe)
+void Process::launch(std::vector<std::string> arguments, FileDescriptors fd, bool child)
 {
 	this->fd = fd;
-	launch(arguments, pipe);
+	launch(arguments, child);
 }
 
 std::vector<std::string> Process::redirections(const std::vector<std::string>& arguments)
@@ -215,4 +204,13 @@ void Process::set_status(int status)
 void Process::wait()
 {
 	waitpid(pid, &status, 0);
+}
+
+void Process::close_fd()
+{
+	if (fd.in != STDIN_FILENO)
+		close(fd.in);
+
+	if (fd.out != STDOUT_FILENO)
+		close(fd.out);
 }

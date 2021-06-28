@@ -62,6 +62,12 @@ struct FileDescriptors
 	 *
 	 */
 	void clear();
+
+	/**
+	 * @brief Close the files descriptors
+	 *
+	 */
+	void close();
 };
 
 #endif

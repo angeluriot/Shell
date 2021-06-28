@@ -1,6 +1,6 @@
 #include "process/Process.hpp"
 
-void Process::mkdir(const std::vector<std::string>& arguments)
+void Process::mkdir(const std::vector<std::string>& arguments, bool child)
 {
 	if (arguments.size() == 2)
 	{
