@@ -34,6 +34,10 @@ Ce dépôt contient le code source d'un shell simplifié.
 
 <br/>
 
+* La gestion des processus en background avec `&` (exemple : `sleep 5 &`)
+
+<br/>
+
 # Remarques
 
 * Le programme ne fonctionne que sur un environnement Unix.
