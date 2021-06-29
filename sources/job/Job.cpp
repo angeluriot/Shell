@@ -1,17 +1,25 @@
 #include "job/Job.hpp"
 #include "shell/Shell.hpp"
 
-Job::Job(const std::vector<std::string>& arguments)
+Job::Job(const std::vector<std::string>& arguments, bool foreground)
 {
 	process_list.clear();
-	launch(arguments);
+	launch(arguments, foreground);
 }
 
-void Job::launch(const std::vector<std::string>& arguments)
+void Job::launch(const std::vector<std::string>& arguments, bool foreground)
 {
+	this->foreground = foreground;
+
 	// Syntax error case
 	if (arguments.empty() || arguments.front() == "|" || arguments.back() == "|")
 		throw std::invalid_argument("syntax error");
+
+	// Set arguments
+	for (int i = 0; i < arguments.size(); i++)
+		this->arguments += arguments[i] + " ";
+
+	this->arguments.pop_back();
 
 	int nb_pipes = std::count(arguments.begin(), arguments.end(), "|");
 	std::vector<FileDescriptors> fd_list = {};
@@ -60,16 +68,51 @@ void Job::launch(const std::vector<std::string>& arguments)
 
 	// No pipes case
 	else
-		process_list.emplace_back(arguments, false, this);
+		process_list.emplace_back(arguments, !foreground, this);
 
-	// Wait until all process finished
-	wait();
+	// Wait until all process finished if in foreground
+	if (foreground)
+		wait();
+
+	// Show pid of background process
+	else
+	{
+		number = Shell::job_list.size() + 1;
+		std::cout << "[" << number << "] (";
+		int i = 0;
+
+		for (Process& process : process_list)
+		{
+			if (i == process_list.size() - 1)
+				std::cout << process.get_pid() << ")" << std::endl;
+
+			else
+				std::cout << process.get_pid() << ", ";
+
+			i++;
+		}
+	}
 }
 
 void Job::wait()
 {
 	for (Process process : process_list)
 		process.wait();
+}
+
+bool Job::is_finished()
+{
+	// Foreground process is always finished in this context
+	if (foreground)
+		return true;
+
+	// Check all background process
+	for (Process process : process_list)
+		if (!process.is_finished())
+			return false;
+
+	std::cout << "[" << number << "]+ Done          " << arguments << std::endl;
+	return true;
 }
 
 void Job::close_fd()

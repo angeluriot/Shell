@@ -9,17 +9,8 @@
  */
 struct FileDescriptors
 {
-	/**
-	 * @brief input file descriptor
-	 *
-	 */
-	int in;
-
-	/**
-	 * @brief output file descriptor
-	 *
-	 */
-	int out;
+	int in;		// Input file descriptor
+	int out;	// Output file descriptor
 
 	/**
 	 * @brief Construct file descriptors structure

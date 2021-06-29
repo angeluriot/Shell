@@ -16,7 +16,7 @@ std::vector<std::string> Shell::separate_parts(std::string command)
 	// Add spaces around pipes/redirections
 	for (int i = 0; i < command.size(); i++)
 	{
-		if (command[i] == '>' || command[i] == '<' || command[i] == '|')
+		if (command[i] == '>' || command[i] == '<' || command[i] == '|' || command[i] == '&')
 		{
 			if (i + 1 < command.size() && command[i] == '>' && command[i + 1] == '>')
 			{
@@ -35,6 +35,7 @@ std::vector<std::string> Shell::separate_parts(std::string command)
 		}
 	}
 
+	command.push_back(' ');
 	std::vector<std::string> result = {};
 
 	while (true)
@@ -42,6 +43,9 @@ std::vector<std::string> Shell::separate_parts(std::string command)
 		// Remove start spaces
 		while (command.front() == ' ' || command.front() == '\t')
 			command = command.substr(1);
+
+		if (command.empty())
+			break;
 
 		// Add word in the array
 		size_t end = command.find_first_of(" \t");
@@ -55,13 +59,34 @@ std::vector<std::string> Shell::separate_parts(std::string command)
 
 		result.push_back(command.substr(0, end));
 		command = command.substr(end);
+
+		if (command.empty())
+			break;
 	}
 
 	return result;
 }
 
-void Shell::launch_command(const std::vector<std::string>& arguments)
+void Shell::launch_command(std::vector<std::string> arguments)
 {
-	job_list.clear();
-	job_list.emplace_back(arguments);
+	bool foreground = true;
+
+	if (std::count(arguments.begin(), arguments.end(), "&") > 0)
+	{
+		if (std::count(arguments.begin(), arguments.end(), "&") > 1 || arguments.back() != "&")
+			throw std::invalid_argument("syntax error");
+
+		foreground = false;
+		arguments.pop_back();
+	}
+
+	Shell::clear_jobs();
+	job_list.emplace_back(arguments, foreground);
+}
+
+void Shell::clear_jobs()
+{
+	for (auto it = job_list.begin(); it != job_list.end(); it++)
+		if (it->is_finished())
+			it = job_list.erase(it);
 }

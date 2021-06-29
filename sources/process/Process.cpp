@@ -214,6 +214,11 @@ void Process::wait()
 	waitpid(pid, &status, 0);
 }
 
+bool Process::is_finished()
+{
+	return waitpid(pid, &status, WNOHANG);
+}
+
 void Process::close_fd()
 {
 	if (fd.in != STDIN_FILENO)
