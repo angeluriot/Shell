@@ -2,7 +2,7 @@
 
 ![Release](https://img.shields.io/badge/Release-v1.0-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
-![size](https://img.shields.io/badge/Size-19Ko-f12222)
+![size](https://img.shields.io/badge/Size-28Ko-f12222)
 ![Open Source](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
 
 <br/>
