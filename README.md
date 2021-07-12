@@ -12,7 +12,7 @@ This program is a simplified Shell running basic Unix commands.
 <br/>
 
 <p align="center">
-	<img src="https://i.imgur.com/JxZfN02.png" width="100%">
+	<img src="https://i.imgur.com/VS1gXCz.png" width="100%">
 </p>
 
 <br/>
@@ -46,7 +46,7 @@ This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
-# Crédits
+# Credits
 
 * [**Angel Uriot**](https://github.com/angeluriot) : Co-creator of the project.
 * [**Arthur Azambre**](https://github.com/arthurazambre) : Co-creator of the project.
