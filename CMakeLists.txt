@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project
-project(System_project)
+project(Shell)
 
 # Sources
 file(GLOB_RECURSE SOURCES sources/*.cpp)
@@ -35,8 +35,6 @@ add_definitions(
 	-luuid
 	-lodbc32
 	-lodbccp32")
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 # VS settings
 if(MSVC)
