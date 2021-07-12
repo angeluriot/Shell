@@ -12,7 +12,7 @@ This program is a simplified Shell running basic Unix commands.
 <br/>
 
 <p align="center">
-	<img src="https://i.imgur.com/VS1gXCz.png" width="100%">
+	<img src="https://i.imgur.com/VS1gXCz.png" width="700">
 </p>
 
 <br/>
