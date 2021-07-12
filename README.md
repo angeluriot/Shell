@@ -2,12 +2,12 @@
 
 ![Release](https://img.shields.io/badge/Release-v1.0-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
-![size](https://img.shields.io/badge/Size-28Ko-f12222)
+![Size](https://img.shields.io/badge/Size-28Ko-f12222)
 ![Open Source](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
 
 <br/>
 
-Ce dépôt contient le code source d'un shell simplifié.
+This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
@@ -17,36 +17,36 @@ Ce dépôt contient le code source d'un shell simplifié.
 
 <br/>
 
-# Fonctionnalités
+# Features
 
-* Le lancement de programmes :
-  * Les programmes de base (exemples : `pwd`, `ls`, `cat`, etc...).
-  * N'importe quel programme avec `path/name` (exemple : `./a.out`).
-  * Builtins : `cd`, `cp` et `mkdir`.
-
-<br/>
-
-* Les redirections d'entrée et de sortie de processus avec `< filename`, `> filename` ou `>> filename` (exemple : `echo bonjour > test.txt`).
+* Launch binaries :
+  * Default Linux binaries (examples : `pwd`, `ls`, `cat`...).
+  * Any program with `path/name` (example : `./a.out`).
+  * Builtins : `cd`, `cp` and `mkdir`.
 
 <br/>
 
-* Les pipes avec `|` (exemple : `printf "A\nB\nC" | grep B | cat`)
+* Process input and output redirection with `< filename`, `> filename` or `>> filename` (example : `echo hello > test.txt`).
 
 <br/>
 
-* La gestion des processus en background avec `&` (exemple : `sleep 5 &`)
+* Pipes with `|` (example : `printf "A\nB\nC" | grep B | cat`)
 
 <br/>
 
-# Remarques
+* Process running in the background with `&` (example : `sleep 5 &`)
 
-* Le programme ne fonctionne que sur un environnement Unix.
+<br/>
 
-* Ce programme est un projet scolaire pour Polytech Paris-Saclay dans le cadre du cours de Système.
+# Notes
+
+* The program only works on a Unix environment.
+
+* This program is a school project for Polytech Paris-Saclay as part of our System course.
 
 <br/>
 
 # Crédits
 
-* [**Angel Uriot**](https://github.com/angeluriot) : Co-créateur du projet.
-* [**Arthur Azambre**](https://github.com/arthurazambre) : Co-créateur du projet.
+* [**Angel Uriot**](https://github.com/angeluriot) : Co-creator of the project.
+* [**Arthur Azambre**](https://github.com/arthurazambre) : Co-creator of the project.
