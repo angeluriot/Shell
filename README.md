@@ -30,11 +30,11 @@ This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
-* Pipes with `|` (example : `printf "A\nB\nC" | grep B | cat`)
+* Pipes with `|` (example : `printf "A\nB\nC" | grep B | cat`).
 
 <br/>
 
-* Process running in the background with `&` (example : `sleep 5 &`)
+* Process running in the background with `&` (example : `sleep 5 &`).
 
 <br/>
 
