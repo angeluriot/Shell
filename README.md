@@ -7,6 +7,8 @@
 
 <br/>
 
+⚠️ This project was made for school with a deadline and I chose to leave it as it was at the time of submission ⚠️
+
 This program is a simplified Shell running basic Unix commands.
 
 <br/>
