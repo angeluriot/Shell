@@ -1,4 +1,4 @@
-# Shell
+# 👨‍💻 Shell
 
 ![Release](https://img.shields.io/badge/Release-v1.0-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
@@ -7,7 +7,9 @@
 
 <br/>
 
-⚠️ This project was made for school with a deadline and I chose to leave it as it was at the time of submission ⚠️
+*⚠️ This project was made for school with a deadline and I chose to leave it as it was at the time of submission ⚠️*
+
+<br/>
 
 This program is a simplified Shell running basic Unix commands.
 
@@ -19,7 +21,16 @@ This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
-# Features
+# 📋 Summary
+
+* **[📋 Summary](#-summary)**
+* **[✨ Features](#-features)**
+* **[📝 Notes](#-notes)**
+* **[🙏 Credits](#-credits)**
+
+<br/>
+
+# ✨ Features
 
 * Launch binaries :
   * Default Linux binaries (examples : `pwd`, `ls`, `cat`...).
@@ -40,7 +51,7 @@ This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
-# Notes
+# 📝 Notes
 
 * The program only works on a Unix environment.
 
@@ -48,7 +59,7 @@ This program is a simplified Shell running basic Unix commands.
 
 <br/>
 
-# Credits
+# 🙏 Credits
 
 * [**Angel Uriot**](https://github.com/angeluriot) : Co-creator of the project.
 * [**Arthur Azambre**](https://github.com/arthurazambre) : Co-creator of the project.
